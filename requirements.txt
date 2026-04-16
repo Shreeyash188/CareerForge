@@ -1,0 +1,19 @@
+# CrewAI and related packages - let pip resolve compatible versions
+crewai
+crewai-tools
+
+# Google AI for LLM
+langchain-google-genai
+
+# Web scraping
+playwright
+
+# Environment variables
+python-dotenv
+
+# API server
+fastapi
+uvicorn[standard]
+
+# Additional utilities
+requests
