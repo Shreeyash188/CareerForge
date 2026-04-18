@@ -8,6 +8,13 @@ Each agent has:
 
 Tools explanation:
 - SerperDevTool: Searches the web (Google) to find company info, salary data, etc.
+
+Agents:
+  1. job_scraper_agent       - Extracts structured info from the job posting URL
+  2. jd_analyzer_agent       - Identifies must-have skills and ATS keywords
+  3. resume_tailor_agent     - Rewrites resume bullets to match JD keywords
+  4. cover_letter_writer_agent - Writes a personalized cover letter
+  5. interview_prep_agent    - Generates role-specific questions + STAR-method answers
 """
 
 import os
@@ -69,6 +76,26 @@ You've written hundreds of cover letters that helped candidates get interviews.
 You know how to tell a compelling story, address requirements naturally, 
 and end with a strong call to action. Your letters are professional but 
 personable, specific but not too long.""",
+    verbose=True,
+    allow_delegation=False,
+    tools=[search_tool],
+    llm="gemini/gemini-2.0-flash"
+)
+
+
+interview_prep_agent = Agent(
+    role="Interview Prep Coach",
+    goal="""Generate a comprehensive, role-specific interview preparation kit: 
+    predicted questions (behavioral, technical, situational), 
+    STAR-method model answers drawn from the candidate's actual resume experience, 
+    and key company talking points to impress the interviewer.""",
+    backstory="""You are a veteran career coach and ex-FAANG hiring manager with 20 years 
+of experience. You've conducted over 5,000 interviews and coached hundreds of 
+candidates to land offers at top companies. You deeply understand what interviewers 
+really want to hear — not generic answers, but specific, quantified stories tied 
+to the candidate's real background. You link every question back to the job's 
+core requirements and craft answers that showcase exactly the right signals: 
+problem-solving, ownership, impact, and cultural fit.""",
     verbose=True,
     allow_delegation=False,
     tools=[search_tool],

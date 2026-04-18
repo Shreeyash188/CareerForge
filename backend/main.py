@@ -3,8 +3,9 @@ FastAPI Backend for CareerForge
 API endpoints to run the CrewAI job application pipeline
 
 Supports:
-- Full pipeline: scrape + analyze + tailor resume + cover letter
+- Full pipeline: scrape + analyze + tailor resume + cover letter + interview prep
 - Direct resume analysis: paste/upload resume → analyze against job URL
+- Standalone interview prep: generate prep kit for an already-tailored session
 """
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
@@ -54,6 +55,7 @@ class JobApplicationResponse(BaseModel):
     jd_analysis: Optional[dict] = None
     tailored_resume: Optional[str] = None
     cover_letter: Optional[str] = None
+    interview_prep: Optional[str] = None   # ← NEW: Interview Preparation Kit
 
 
 # ============================================================
@@ -104,7 +106,9 @@ def root():
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "api": "CareerForge"}
+    return {"status": "healthy", "api": "CareerForge", "version": "2.0", "features": [
+        "job_scrape", "jd_analysis", "resume_tailoring", "cover_letter", "interview_prep"
+    ]}
 
 
 @app.post("/api/apply", response_model=JobApplicationResponse)
@@ -175,7 +179,8 @@ def _build_response(result) -> JobApplicationResponse:
         job_details={"raw": tasks[0].raw if len(tasks) > 0 else ""},
         jd_analysis={"raw": tasks[1].raw if len(tasks) > 1 else ""},
         tailored_resume=tasks[2].raw if len(tasks) > 2 else "",
-        cover_letter=tasks[3].raw if len(tasks) > 3 else ""
+        cover_letter=tasks[3].raw if len(tasks) > 3 else "",
+        interview_prep=tasks[4].raw if len(tasks) > 4 else ""  # ← NEW
     )
 
 

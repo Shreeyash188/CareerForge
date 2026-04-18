@@ -6,7 +6,8 @@ Each task tells an agent:
 - How to do it (instructions)
 - What output to produce (expected_output)
 
-The flow: Job URL -> Scraper -> JD Analyzer -> Resume Tailor -> Cover Letter Writer
+Pipeline flow:
+  Job URL -> Scraper -> JD Analyzer -> Resume Tailor -> Cover Letter Writer -> Interview Prep Coach
 
 Key: Tasks use context=[] to pass output from prior tasks instead of
 template variables like {job_details}. CrewAI injects the raw output
@@ -18,7 +19,8 @@ from agents import (
     job_scraper_agent,
     jd_analyzer_agent,
     resume_tailor_agent,
-    cover_letter_writer_agent
+    cover_letter_writer_agent,
+    interview_prep_agent
 )
 
 
@@ -137,4 +139,64 @@ write_cover_letter_task = Task(
     expected_output="Personalized cover letter in markdown",
     context=[scrape_job_task, analyze_jd_task, tailor_resume_task],
     agent=cover_letter_writer_agent
+)
+
+
+# ============================================================
+# TASK 5: INTERVIEW PREPARATION KIT
+# ============================================================
+"""
+This task generates a full interview preparation kit using every prior
+output: job details, JD analysis, tailored resume, and cover letter.
+It produces role-specific predicted questions + STAR model answers.
+"""
+interview_prep_task = Task(
+    description="""
+    Using the complete context (job details, JD analysis, tailored resume, and cover letter),
+    generate a comprehensive, highly personalized interview preparation kit.
+
+    SECTION 1 – PREDICTED INTERVIEW QUESTIONS (10 total, clearly numbered):
+    - 3 Behavioral questions ("Tell me about a time when...")
+      These MUST reference the specific role's requirements from the JD.
+    - 3 Technical / Role-Specific questions
+      These must target the top must-have skills identified in the JD analysis.
+    - 2 Situational questions ("What would you do if...")
+      Based on the challenges and responsibilities of the role.
+    - 1 Culture-Fit question matched to the company's culture tone.
+    - 1 "Why us?" question about the company/role.
+
+    SECTION 2 – MODEL ANSWERS (one per question):
+    For EACH of the 10 questions, write a complete model answer using the
+    STAR method (Situation → Task → Action → Result): 
+    - Situation: Set a realistic scene from the candidate's actual resume experience.
+    - Task: What the candidate was responsible for.
+    - Action: The specific steps the candidate took (use keywords from the JD).
+    - Result: A concrete, quantified outcome where possible.
+    The answer should feel like the candidate's own voice, not a generic template.
+    Each answer should be 120–180 words.
+
+    SECTION 3 – COMPANY RESEARCH TALKING POINTS:
+    - Research the company (mission, recent news, products, culture) using search.
+    - Provide 3-4 bullet points of compelling facts the candidate can weave into answers
+      to show they've done their homework.
+    - Include 1 smart question the candidate should ask the interviewer at the end.
+
+    SECTION 4 – RAPID FIRE TIPS:
+    - 5 quick, role-specific preparation tips (e.g., topics to brush up on,
+      soft skills to demonstrate, common mistakes to avoid for this exact role).
+
+    Format the entire output in clean markdown with clear section headers.
+    """,
+    expected_output="""A markdown-formatted interview preparation kit with:
+    - 10 predicted questions (behavioral, technical, situational, culture-fit, why-us)
+    - 10 STAR-method model answers personalized to the candidate's resume
+    - Company research talking points and a smart closing question
+    - 5 rapid-fire role-specific preparation tips""",
+    context=[
+        scrape_job_task,
+        analyze_jd_task,
+        tailor_resume_task,
+        write_cover_letter_task
+    ],
+    agent=interview_prep_agent
 )

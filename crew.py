@@ -7,6 +7,7 @@ This file:
 3. Enables memory so agents can share context
 4. Shows how data flows between agents
 5. Logs every application to a CSV tracker
+6. Saves interview prep kit to outputs/ for offline review
 """
 
 import os
@@ -17,13 +18,15 @@ from agents import (
     job_scraper_agent,
     jd_analyzer_agent,
     resume_tailor_agent,
-    cover_letter_writer_agent
+    cover_letter_writer_agent,
+    interview_prep_agent
 )
 from tasks import (
     scrape_job_task,
     analyze_jd_task,
     tailor_resume_task,
-    write_cover_letter_task
+    write_cover_letter_task,
+    interview_prep_task
 )
 
 
@@ -46,14 +49,16 @@ def create_job_crew():
             job_scraper_agent,
             jd_analyzer_agent,
             resume_tailor_agent,
-            cover_letter_writer_agent
+            cover_letter_writer_agent,
+            interview_prep_agent          # ← NEW: Interview Prep Coach (5th agent)
         ],
         
         tasks=[
             scrape_job_task,
             analyze_jd_task,
             tailor_resume_task,
-            write_cover_letter_task
+            write_cover_letter_task,
+            interview_prep_task           # ← NEW: Interview Prep Kit (5th task)
         ],
         
         # Process.SEQUENTIAL means tasks run one after another
@@ -92,7 +97,7 @@ def run_pipeline(job_url, resume_content):
         resume_content: The candidate's resume as text
         
     Returns:
-        CrewOutput with results from all tasks
+        CrewOutput with results from all 5 tasks
     """
     
     # Create the crew
@@ -107,10 +112,43 @@ def run_pipeline(job_url, resume_content):
         }
     )
     
+    # Save the interview prep kit to a timestamped file for offline review
+    _save_interview_prep(result)
+    
     # Log the application to CSV tracker
     log_application(job_url, "extracted_by_agent", "extracted_by_agent", 0)
     
     return result
+
+
+def _save_interview_prep(result):
+    """
+    Save the interview preparation kit (task 5 output) to a markdown file
+    in the outputs/ directory so the user can review it anytime offline.
+    """
+    try:
+        tasks = result.tasks_output
+        if len(tasks) < 5:
+            return  # Guard: pipeline didn't run all 5 tasks
+
+        prep_content = tasks[4].raw  # Index 4 = interview_prep_task output
+        if not prep_content:
+            return
+
+        os.makedirs("outputs", exist_ok=True)
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        filepath = f"outputs/interview_prep_{timestamp}.md"
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write("# CareerForge — Interview Preparation Kit\n")
+            f.write(f"_Generated: {datetime.datetime.now().strftime('%B %d, %Y at %H:%M')}_\n\n")
+            f.write("---\n\n")
+            f.write(prep_content)
+
+        print(f"[CareerForge] ✅ Interview prep kit saved to: {filepath}")
+    except Exception as exc:
+        # Non-fatal: log but don't crash the pipeline
+        print(f"[CareerForge] ⚠️ Could not save interview prep kit: {exc}")
 
 
 def log_application(job_url, company, role, match_score):

@@ -140,14 +140,19 @@ export default function Home() {
 
   // ── Render ─────────────────────────────────────────────────
   return (
-    <div className="min-h-screen py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen py-12 px-4 font-sans relative overflow-hidden">
+      <div className="max-w-4xl mx-auto relative z-10">
         {/* Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-5xl font-bold gradient-text mb-3">
+        <div className="text-center mb-12 animate-fade-in">
+          <div className="inline-flex items-center justify-center p-2 mb-4 rounded-2xl bg-white/5 border border-white/10 shadow-xl backdrop-blur-md">
+            <svg className="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+          </div>
+          <h1 className="text-5xl md:text-6xl font-bold font-outfit gradient-text mb-4 tracking-tight">
             CareerForge
           </h1>
-          <p className="text-lg text-gray-400">
+          <p className="text-lg md:text-xl text-indigo-200/70 font-light">
             AI-Powered Job Application Assistant
           </p>
         </div>
@@ -429,12 +434,13 @@ export default function Home() {
           </form>
         ) : (
           /* ─── RESULTS VIEW ───────────────────────────────── */
-          <div className="space-y-6 animate-fade-in">
+          <div className="space-y-8 animate-fade-in">
             {/* Success header */}
-            <div className="glass rounded-xl p-6 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
+            <div className="glass rounded-2xl p-8 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(34,197,94,0.2)]">
                 <svg
-                  className="w-8 h-8 text-green-400"
+                  className="w-10 h-10 text-green-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -447,21 +453,22 @@ export default function Home() {
                   />
                 </svg>
               </div>
-              <h2 className="text-xl font-semibold text-white mb-2">
+              <h2 className="text-2xl font-bold font-outfit text-white mb-3">
                 Application Materials Generated!
               </h2>
-              <p className="text-gray-400">{result.message}</p>
+              <p className="text-indigo-200/70 mb-6">{result.message}</p>
               <button
                 onClick={resetForm}
-                className="mt-4 px-6 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                className="px-6 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-medium text-sm text-white flex items-center gap-2 mx-auto"
               >
-                ← Start Over
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                Start Over
               </button>
             </div>
 
             {/* Tabs */}
-            <div className="glass rounded-2xl p-6">
-              <div className="tabs mb-6">
+            <div className="glass rounded-3xl p-6 md:p-8">
+              <div className="tabs-container mb-8">
                 <button
                   id="tab-analysis"
                   onClick={() => setActiveTab("analysis")}
@@ -614,8 +621,11 @@ export default function Home() {
         )}
 
         {/* Footer */}
-        <div className="text-center mt-10 text-gray-500 text-sm">
-          <p>Powered by CrewAI &amp; Gemini</p>
+        <div className="text-center mt-12 mb-6 text-indigo-200/40 text-sm font-medium flex items-center justify-center gap-2">
+          <span>Powered by</span>
+          <span className="text-indigo-400/80">CrewAI</span>
+          <span>&amp;</span>
+          <span className="text-purple-400/80">Gemini</span>
         </div>
       </div>
     </div>
