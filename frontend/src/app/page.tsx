@@ -9,10 +9,19 @@ interface JobResult {
   jd_analysis?: { raw: string };
   tailored_resume?: string;
   cover_letter?: string;
+  interview_prep?: string;
+}
+
+interface ProgressStep {
+  step: number;
+  total: number;
+  agent: string;
+  description: string;
+  status: "pending" | "running" | "done";
 }
 
 type ResumeInputMode = "paste" | "upload";
-type ResultTab = "analysis" | "resume" | "cover";
+type ResultTab = "analysis" | "resume" | "cover" | "interview";
 
 export default function Home() {
   const [jobUrl, setJobUrl] = useState("");
@@ -24,7 +33,36 @@ export default function Home() {
   const [result, setResult] = useState<JobResult | null>(null);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<ResultTab>("analysis");
+  const [progressSteps, setProgressSteps] = useState<ProgressStep[]>([
+    { step: 1, total: 5, agent: "Job Scraper", description: "Extracting job details...", status: "pending" },
+    { step: 2, total: 5, agent: "JD Analyzer", description: "Analyzing requirements...", status: "pending" },
+    { step: 3, total: 5, agent: "Resume Tailor", description: "Tailoring your resume...", status: "pending" },
+    { step: 4, total: 5, agent: "Cover Letter Writer", description: "Writing cover letter...", status: "pending" },
+    { step: 5, total: 5, agent: "Interview Prep Coach", description: "Generating interview kit...", status: "pending" },
+  ]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Download helper ────────────────────────────────────────
+  const downloadFile = (content: string, filename: string) => {
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadAll = () => {
+    if (!result) return;
+    if (result.job_details?.raw) downloadFile(result.job_details.raw, "job_details.md");
+    if (result.jd_analysis?.raw) downloadFile(result.jd_analysis.raw, "jd_analysis.md");
+    if (result.tailored_resume) downloadFile(result.tailored_resume, "tailored_resume.md");
+    if (result.cover_letter) downloadFile(result.cover_letter, "cover_letter.md");
+    if (result.interview_prep) downloadFile(result.interview_prep, "interview_prep.md");
+  };
 
   // ── File handling ──────────────────────────────────────────
   const handleFileSelect = (file: File) => {

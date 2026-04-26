@@ -20,7 +20,12 @@ from agents import (
     jd_analyzer_agent,
     resume_tailor_agent,
     cover_letter_writer_agent,
-    interview_prep_agent
+    interview_prep_agent,
+    networker_agent,
+    learning_coach_agent,
+    negotiator_agent,
+    intel_agent,
+    portfolio_matcher_agent
 )
 
 
@@ -199,4 +204,117 @@ interview_prep_task = Task(
         write_cover_letter_task
     ],
     agent=interview_prep_agent
+)
+
+
+# ============================================================
+# TASK 6: COLD OUTREACH & NETWORKING
+# ============================================================
+"""
+This task generates highly personalized networking messages.
+"""
+network_outreach_task = Task(
+    description="""
+    Using the job details and JD analysis, write two personalized networking messages:
+    
+    1. A short, punchy LinkedIn connection request (under 300 characters) to the Recruiter or Hiring Manager.
+    2. A cold email (about 150 words) that highlights why the candidate's top matching skills 
+       make them a perfect fit for this specific role, requesting a brief 10-minute chat.
+       
+    The tone should be confident, professional, and value-driven (focusing on what the candidate can do for them).
+    Output them clearly in markdown format.
+    """,
+    expected_output="A LinkedIn connection request and a cold email script in markdown.",
+    context=[scrape_job_task, analyze_jd_task],
+    agent=networker_agent
+)
+
+
+# ============================================================
+# TASK 7: SKILL GAP & LEARNING PATH
+# ============================================================
+"""
+This task identifies missing skills and generates a learning plan.
+"""
+skill_gap_task = Task(
+    description="""
+    Compare the candidate's original resume: {resume_content}
+    against the "must-have" skills from the JD analysis.
+    
+    1. Identify exact missing skills or technologies.
+    2. Create a "1-Week Crash Course" plan with suggested topics, specific documentation to read, 
+       or core concepts to memorize so the candidate can confidently discuss these during the interview.
+       
+    Output a structured study plan in markdown.
+    """,
+    expected_output="A skill gap analysis and 1-week crash course learning plan.",
+    context=[scrape_job_task, analyze_jd_task],
+    agent=learning_coach_agent
+)
+
+
+# ============================================================
+# TASK 8: SALARY NEGOTIATION COACH
+# ============================================================
+"""
+This task formulates a negotiation strategy.
+"""
+salary_negotiation_task = Task(
+    description="""
+    Using the job details (title, location, stated salary range if any), generate a customized salary negotiation strategy.
+    
+    1. Research market rates for this role and location.
+    2. Provide a negotiation script for when the recruiter asks "What are your salary expectations?"
+    3. Provide a script for negotiating the final offer after it is extended.
+    
+    Output the strategy, data points, and scripts in markdown.
+    """,
+    expected_output="Salary negotiation strategy, market data, and scripts in markdown.",
+    context=[scrape_job_task],
+    agent=negotiator_agent
+)
+
+
+# ============================================================
+# TASK 9: COMPANY INTEL & RED FLAG DETECTOR
+# ============================================================
+"""
+This task investigates the company for news and red flags.
+"""
+company_intel_task = Task(
+    description="""
+    Based on the job details and company name, perform web searches to find recent news about the company.
+    
+    1. Look for massive green flags (new funding rounds, major product launches, high growth).
+    2. Look for potential red flags (recent layoffs, high executive turnover, bad Glassdoor reviews, stock drops).
+    3. Summarize the findings into a "Company Intel Briefing".
+    
+    Output the briefing document clearly identifying green and red flags.
+    """,
+    expected_output="A company intel briefing document with green flags and red flags in markdown.",
+    context=[scrape_job_task],
+    agent=intel_agent
+)
+
+
+# ============================================================
+# TASK 10: PORTFOLIO / PROJECT MATCHER
+# ============================================================
+"""
+This task aligns candidate projects to the job challenges.
+"""
+portfolio_matcher_task = Task(
+    description="""
+    Analyze the JD analysis and the candidate's project list/GitHub details: {github_projects}
+    (If github_projects is empty, try to extract projects from the original resume).
+    
+    1. Select 2-3 projects that best align with the core challenges of the target job.
+    2. Rewrite the descriptions of these projects to explicitly highlight how they 
+       demonstrate the skills needed to solve the hiring company's problems.
+       
+    Output the aligned project descriptions in markdown.
+    """,
+    expected_output="2-3 highly targeted, rewritten project descriptions in markdown.",
+    context=[scrape_job_task, analyze_jd_task],
+    agent=portfolio_matcher_agent
 )

@@ -19,14 +19,24 @@ from agents import (
     jd_analyzer_agent,
     resume_tailor_agent,
     cover_letter_writer_agent,
-    interview_prep_agent
+    interview_prep_agent,
+    networker_agent,
+    learning_coach_agent,
+    negotiator_agent,
+    intel_agent,
+    portfolio_matcher_agent
 )
 from tasks import (
     scrape_job_task,
     analyze_jd_task,
     tailor_resume_task,
     write_cover_letter_task,
-    interview_prep_task
+    interview_prep_task,
+    network_outreach_task,
+    skill_gap_task,
+    salary_negotiation_task,
+    company_intel_task,
+    portfolio_matcher_task
 )
 
 
@@ -50,7 +60,12 @@ def create_job_crew():
             jd_analyzer_agent,
             resume_tailor_agent,
             cover_letter_writer_agent,
-            interview_prep_agent          # ← NEW: Interview Prep Coach (5th agent)
+            interview_prep_agent,
+            networker_agent,
+            learning_coach_agent,
+            negotiator_agent,
+            intel_agent,
+            portfolio_matcher_agent
         ],
         
         tasks=[
@@ -58,12 +73,17 @@ def create_job_crew():
             analyze_jd_task,
             tailor_resume_task,
             write_cover_letter_task,
-            interview_prep_task           # ← NEW: Interview Prep Kit (5th task)
+            interview_prep_task,
+            network_outreach_task,
+            skill_gap_task,
+            salary_negotiation_task,
+            company_intel_task,
+            portfolio_matcher_task
         ],
         
-        # Process.SEQUENTIAL means tasks run one after another
+        # Process.sequential means tasks run one after another
         # Each task waits for the previous one to complete
-        process=Process.SEQUENTIAL,
+        process=Process.sequential,
         
         # Enable memory so agents can remember context
         # This allows agents to reference earlier work
@@ -77,24 +97,21 @@ def create_job_crew():
         
         # Enable full-text search memory for better context recall
         embedder={
-            "provider": "google",
-            "config": {
-                "model": "models/text-embedding-004",
-                "api_key": os.getenv("GOOGLE_API_KEY")
-            }
+            "provider": "google-generativeai"
         }
     )
     
     return job_crew
 
 
-def run_pipeline(job_url, resume_content):
+def run_pipeline(job_url, resume_content, github_projects=""):
     """
     Run the complete job application pipeline.
     
     Args:
         job_url: URL of the job posting
         resume_content: The candidate's resume as text
+        github_projects: Candidate's project list or GitHub details
         
     Returns:
         CrewOutput with results from all 5 tasks
@@ -108,12 +125,16 @@ def run_pipeline(job_url, resume_content):
     result = crew.kickoff(
         inputs={
             "job_url": job_url,
-            "resume_content": resume_content
+            "resume_content": resume_content,
+            "github_projects": github_projects
         }
     )
     
     # Save the interview prep kit to a timestamped file for offline review
     _save_interview_prep(result)
+    
+    # Save the other new extra outputs
+    _save_extra_outputs(result)
     
     # Log the application to CSV tracker
     log_application(job_url, "extracted_by_agent", "extracted_by_agent", 0)
@@ -149,6 +170,42 @@ def _save_interview_prep(result):
     except Exception as exc:
         # Non-fatal: log but don't crash the pipeline
         print(f"[CareerForge] ⚠️ Could not save interview prep kit: {exc}")
+
+
+def _save_extra_outputs(result):
+    """
+    Save the outputs from the 5 new tasks (networking, skills gap, etc.) to markdown files.
+    """
+    try:
+        tasks = result.tasks_output
+        if len(tasks) < 10:
+            return  # Pipeline didn't run all 10 tasks
+
+        os.makedirs("outputs", exist_ok=True)
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        # Mapping index to task name for saving files
+        extra_tasks_map = {
+            5: "networking",
+            6: "skill_gap",
+            7: "salary_negotiation",
+            8: "company_intel",
+            9: "portfolio_matcher"
+        }
+        
+        for idx, prefix in extra_tasks_map.items():
+            content = tasks[idx].raw
+            if content:
+                filepath = f"outputs/{prefix}_{timestamp}.md"
+                with open(filepath, "w", encoding="utf-8") as f:
+                    f.write(f"# CareerForge — {prefix.replace('_', ' ').title()}\n")
+                    f.write(f"_Generated: {datetime.datetime.now().strftime('%B %d, %Y at %H:%M')}_\n\n")
+                    f.write("---\n\n")
+                    f.write(content)
+                print(f"[CareerForge] ✅ {prefix.replace('_', ' ').title()} saved to: {filepath}")
+
+    except Exception as exc:
+        print(f"[CareerForge] ⚠️ Could not save extra outputs: {exc}")
 
 
 def log_application(job_url, company, role, match_score):

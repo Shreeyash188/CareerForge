@@ -36,6 +36,7 @@ class JobApplicationRequest(BaseModel):
     """Request body for the job application endpoint."""
     job_url: str
     resume_content: str
+    github_projects: str = ""
 
 
 class JobApplicationResponse(BaseModel):
@@ -46,6 +47,11 @@ class JobApplicationResponse(BaseModel):
     jd_analysis: dict
     tailored_resume: str
     cover_letter: str
+    networking_outreach: str
+    skill_gap_plan: str
+    salary_negotiation: str
+    company_intel: str
+    portfolio_matcher: str
 
 
 @app.get("/")
@@ -59,7 +65,7 @@ def apply_for_job(request: JobApplicationRequest):
     Run the full CrewAI pipeline and return all generated materials.
     """
     try:
-        result = run_pipeline(request.job_url, request.resume_content)
+        result = run_pipeline(request.job_url, request.resume_content, request.github_projects)
 
         tasks = result.tasks_output  # CrewAI puts real output here
 
@@ -69,7 +75,12 @@ def apply_for_job(request: JobApplicationRequest):
             job_details={"raw": tasks[0].raw if len(tasks) > 0 else ""},
             jd_analysis={"raw": tasks[1].raw if len(tasks) > 1 else ""},
             tailored_resume=tasks[2].raw if len(tasks) > 2 else "",
-            cover_letter=tasks[3].raw if len(tasks) > 3 else ""
+            cover_letter=tasks[3].raw if len(tasks) > 3 else "",
+            networking_outreach=tasks[5].raw if len(tasks) > 5 else "",
+            skill_gap_plan=tasks[6].raw if len(tasks) > 6 else "",
+            salary_negotiation=tasks[7].raw if len(tasks) > 7 else "",
+            company_intel=tasks[8].raw if len(tasks) > 8 else "",
+            portfolio_matcher=tasks[9].raw if len(tasks) > 9 else ""
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -150,20 +161,23 @@ def main():
     # ============================================================
     job_url = input("Enter the job posting URL: ") or "https://jobs.lever.co/example/123"
     resume_content = sample_resume()
+    github_projects = input("Enter your GitHub projects or portfolio links (optional): ") or ""
 
     print("\n" + "="*60)
     print("STARTING JOB APPLICATION PIPELINE")
     print("="*60)
     print(f"\nJob URL: {job_url}")
     print(f"Resume length: {len(resume_content)} characters")
-    print("\nRunning crew with 4 agents...")
+    if github_projects:
+        print(f"Projects included: Yes")
+    print("\nRunning crew with 9 agents and 10 tasks...")
     print("-"*60)
 
     # ============================================================
     # RUN: Execute the crew pipeline
     # ============================================================
     try:
-        result = run_pipeline(job_url, resume_content)
+        result = run_pipeline(job_url, resume_content, github_projects)
 
         print("\n" + "="*60)
         print("PIPELINE COMPLETE!")
